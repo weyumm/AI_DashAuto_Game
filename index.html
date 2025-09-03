@@ -1,0 +1,577 @@
+<html>
+	<head>
+        <title>Dash - WebGL 自动驾驶汽车模拟器</title>
+        <link rel="stylesheet" href="vendor/bulma.min.css" />
+        <link rel="stylesheet" href="css/dash.css" />
+        <meta charset="utf-8" />
+	</head>
+	<body>
+        <div id="container">
+            <div id="dashboard" class="gui-box sim-mode-box">
+                <div id="planner-error" class="gui-box is-size-7 is-hidden" style="background: #422b;">
+                    <span class="icon has-text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </span>
+                    <span class="has-text-grey-lighter" style="position: relative; top: -2px;">运动规划器初始化错误。<a href="https://github.com/mattbradley/dash#browser-support" target="_blank">检查您的浏览器是否受支持</a>。</span>
+                </div>
+                <div id="controls" class="is-pulled-left">
+                    <div id="brake"></div>
+                    <div id="gas"></div>
+                    <div id="gear"></div>
+                    <div id="wheel-wrapper">
+                        <div id="wheel">
+                            <div id="wheel-marker"></div>
+                        </div>
+                        <div id="wheel-pie">
+                            <div id="wheel-pie-left"></div>
+                            <div id="wheel-pie-right"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="stats" class="is-pulled-right">
+                    <div class="columns is-gapless" style="margin-bottom: 16px;">
+                        <div class="column has-text-centered">
+                            <div class="heading has-text-grey">速度</div>
+                            <div id="speed" class="is-size-6 has-text-grey-lighter has-text-weight-bold">&mdash;</div>
+                            <div id="speed-units" class="units-button is-size-7 has-text-grey">m/s</div>
+                        </div>
+                        <div class="column has-text-centered">
+                            <div class="heading has-text-grey">里程</div>
+                            <div id="station" class="is-size-6 has-text-grey-lighter has-text-weight-bold">&mdash;</div>
+                            <div id="station-units" class="units-button is-size-7 has-text-grey">米</div>
+                        </div>
+                        <div class="column has-text-centered">
+                            <div class="heading has-text-grey">纬度</div>
+                            <div id="latitude" class="is-size-6 has-text-grey-lighter has-text-weight-bold">&mdash;</div>
+                            <div id="latitude-units" class="units-button is-size-7 has-text-grey">米</div>
+                        </div>
+                        <div class="column has-text-centered">
+                            <div class="heading has-text-grey">规划时间</div>
+                            <div id="plan-time" class="is-size-6 has-text-grey-lighter has-text-weight-bold">&mdash;</div>
+                            <div class="is-size-7 has-text-grey">毫秒</div>
+                        </div>
+                    </div>
+                    <div class="columns is-gapless">
+                        <div class="column">
+                            <div class="button is-small is-static" style="background: transparent; border: none; margin-left: 12px;">
+                                <span class="icon is-small has-text-grey-lighter">
+                                    <i class="fas fa-clock"></i>
+                                </span>
+                                <span id="elapsed-time" class="is-size-6 has-text-grey-lighter has-text-weight-bold">&mdash;</span>
+                            </div>
+                            <div class="is-pulled-right">
+                                <div class="button is-small is-static is-pulled-left" style="background: transparent; border: none;">
+                                    <span class="icon is-medium has-text-grey-lighter">
+                                        <i class="fas fa-lg fa-car"></i>
+                                    </span>
+                                </div>
+                                <div class="buttons has-addons" style="padding-left: 8px;">
+                                    <span id="mode-manual" class="button is-small is-dark is-outlined is-inverted">手动</span>
+                                    <span id="mode-autonomous" class="button is-small is-dark is-outlined is-inverted">自动</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="config-box" class="gui-box sim-mode-box">
+                <div id="show-config-box">
+                    <div id="show-welcome-modal" class="button is-small is-dark is-outlined is-inverted" title="关于 Dash">
+                        <span class="icon is-medium">
+                            <i class="fas fa-lg fa-info"></i>
+                        </span>
+                    </div>
+                    &nbsp;
+                    <div id="show-config-button" class="button is-small is-dark is-outlined is-inverted" title="规划器配置">
+                        <span class="icon is-medium">
+                            <i class="fas fa-lg fa-cog"></i>
+                        </span>
+                    </div>
+                </div>
+                <div id="config-box-content" class="is-hidden">
+                    <div class="is-clearfix">
+                        <div class="field is-grouped is-pulled-right">
+                            <div class="control">
+                                <div id="restore-defaults-config-button" class="button is-small is-danger" title="恢复默认设置">
+                                    <span class="icon is-medium">
+                                        <i class="fas fa-lg fa-undo-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="control">
+                                <div id="save-config-button" class="button is-small is-success" title="保存配置">
+                                    <span class="icon is-medium">
+                                        <i class="fas fa-lg fa-save"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="control">
+                                <div id="hide-config-button" class="button is-small is-dark is-outlined is-inverted" title="关闭">
+                                    <span class="icon is-medium">
+                                        <i class="fas fa-lg fa-times"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="title is-5 has-text-grey-lighter" style="padding-top: 2px; padding-right: 8px; background: transparent; border: none;">规划器配置</div>
+                    </div>
+                    <div style="margin-top: 16px; max-height: 400px; overflow-y: scroll;">
+                        <form id="config-form"></form>
+                    </div>
+                </div>
+            </div>
+            <div id="editor-enabler" class="gui-box sim-mode-box">
+                <div class="button is-small is-static is-pulled-left" style="background: transparent; border: none;">
+                    <span class="icon is-medium has-text-grey-lighter">
+                        <i class="fas fa-lg fa-road"></i>
+                    </span>
+                </div>
+                <div class="field is-grouped" style="padding-left: 8px;">
+                    <div class="control">
+                        <span id="scenario-play" class="button is-small is-dark is-outlined is-inverted is-hidden" title="播放场景">
+                            <span class="icon is-medium">
+                                <i class="fas fa-lg fa-play"></i>
+                            </span>
+                        </span>
+                        <span id="scenario-pause" class="button is-small is-dark is-outlined is-inverted" title="暂停场景">
+                            <span class="icon is-medium">
+                                <i class="fas fa-lg fa-pause"></i>
+                            </span>
+                        </span>
+                        <span id="scenario-restart" class="button is-small is-dark is-outlined is-inverted" title="重启场景">
+                            <span class="icon is-medium">
+                                <i class="fas fa-lg fa-undo-alt"></i>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="control"></div>
+                    <div class="control">
+                        <span id="editor-enable" class="button is-small is-dark is-outlined is-inverted">编辑场景</span>
+                        <span id="simulator-load" class="button is-small is-dark is-outlined is-inverted">加载场景</span>
+                    </div>
+                </div>
+            </div>
+            <div id="editor-scenario-info" class="gui-box edit-mode-box is-hidden has-text-right allow-user-select">
+                <div id="editor-scenario-name" class="title is-5 has-text-grey-lighter" title="未命名" style="line-height: 1.4;">未命名</div>
+                <div class="subtitle is-7">
+                    <span class="has-text-grey">最后保存:</span>
+                    <span id="editor-scenario-saved-at" class="has-text-grey-lighter">未保存</span>
+                </div>
+            </div>
+            <div class="edit-mode-box is-hidden">
+                <div id="editor-road-box" class="gui-box is-hidden">
+                    <div class="field is-horizontal">
+                        <div class="field-label is-small" style="flex-grow: 100;">
+                            <label class="label has-text-grey-light" for="editor-initial-speed">初始速度</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons" style="width: 90px;">
+                                <div class="control" style="margin-right: 0.5rem;">
+                                    <input id="editor-initial-speed" class="input is-small" type="text" style="width: 60px;" />
+                                </div>
+                                <span class="is-size-7 has-text-grey" style="padding-top: 0.375rem;">m/s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-small" style="flex-grow: 100;">
+                            <label class="label has-text-grey-light" for="editor-speed-limit">速度限制</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons" style="width: 90px;">
+                                <div class="control" style="margin-right: 0.5rem;">
+                                    <input id="editor-speed-limit" class="input is-small" type="text" style="width: 60px;" />
+                                </div>
+                                <span class="is-size-7 has-text-grey" style="padding-top: 0.375rem;">m/s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-small" style="flex-grow: 100;">
+                            <label class="label has-text-grey-light">车道偏好</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons" style="width: 90px;">
+                                <div class="control">
+                                    <div id="editor-lane-left" class="button is-small is-dark is-outlined is-inverted">
+                                        <span class="icon is-medium">
+                                            <i class="fas fa-lg fa-angle-left"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="control">
+                                    <div id="editor-lane-right" class="button is-small is-dark is-outlined is-inverted">
+                                        <span class="icon is-medium">
+                                            <i class="fas fa-lg fa-angle-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="editor-dynamic-obstacles-box" class="gui-box is-hidden">
+                    <div class="is-clearfix">
+                        <div class="field is-pulled-right">
+                            <div class="control">
+                                <div id="editor-add-dynamic-obstacle" class="button is-small is-dark is-outlined is-inverted" title="添加动态障碍物">
+                                    <span class="icon is-medium">
+                                        <i class="fas fa-lg fa-plus"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="title is-5 has-text-grey-lighter" style="padding-top: 2px; padding-right: 8px; background: transparent; border: none;">动态障碍物</div>
+                    </div>
+                    <div class="columns is-gapless has-text-weight-bold">
+                        <div class="column is-1"></div>
+                        <div class="column is-3">
+                            <abbr class="is-size-7 has-text-grey-lighter" title="确定动态障碍物的大小和形状">类型</abbr>
+                        </div>
+                        <div class="column is-1 has-text-centered">
+                            <abbr class="is-size-7 has-text-grey-lighter" style="position: relative; left: -5px;" title="选中以与道路平行对齐；未选中以与道路垂直对齐">平行</abbr>
+                        </div>
+                        <div class="column is-3 has-text-centered">
+                            <abbr class="is-size-7 has-text-grey-lighter" title="初始站-纬位置；站以米为单位，纬度是标准化值，其中-1是左边界，+1是右边界">SL位置</abbr>
+                        </div>
+                        <div class="column is-3 has-text-centered">
+                            <abbr class="is-size-7 has-text-grey-lighter" title="站-纬速度，单位为m/s">SL速度</abbr>
+                        </div>
+                        <div class="column is-1"></div>
+                    </div>
+                    <div id="editor-dynamic-obstacle-forms" style="margin-top: 16px; max-height: 400px; overflow-y: scroll;"></div>
+                </div>
+            </div>
+            <div id="editor-stats" class="gui-box edit-mode-box is-hidden">
+                <div id="editor-stats-sl" class="gui-box">
+                    <div class="button is-small is-static has-text-grey-light is-paddingless" style="background: transparent; border: none;">
+                        S:&nbsp;<b id="editor-stats-station">0</b>米
+                    </div>
+                    &nbsp;
+                    <div class="button is-small is-static has-text-grey-light is-paddingless" style="background: transparent; border: none;">
+                        L:&nbsp;<b id="editor-stats-latitude">0</b>米
+                    </div>
+                </div>
+                <div class="button is-small is-static has-text-grey-light is-paddingless" style="background: transparent; border: none;">
+                    道路长度:&nbsp;<b id="editor-stats-road-length">0.0</b>米
+                </div>
+                &nbsp;
+                <div class="button is-small is-static has-text-grey-light is-paddingless" style="background: transparent; border: none;">
+                    静态障碍物:&nbsp;<b id="editor-stats-static-obstacles">0</b>
+                </div>
+                &nbsp;
+                <div class="button is-small is-static has-text-grey-light is-paddingless" style="background: transparent; border: none;">
+                    动态障碍物:&nbsp;<b id="editor-stats-dynamic-obstacles">0</b>
+                </div>
+            </div>
+            <div id="editor-controls" class="gui-box edit-mode-box is-hidden">
+                <div id="editor-help" class="gui-box is-size-7 has-text-grey">
+                    <div id="editor-help-path" class="is-hidden">
+                        <div class="gui-box flex">
+                            <div class="has-text-weight-bold has-text-right" style="margin-right: 0.75rem;">
+                                <div>左键单击</div>
+                                <div>左键单击 + 拖拽</div>
+                                <div>Shift + 左键单击</div>
+                                <div>右键单击 + 拖拽</div>
+                            </div>
+                            <div>
+                                <div>放置道路锚点</div>
+                                <div>移动道路锚点</div>
+                                <div>删除道路锚点</div>
+                                <div>平移视图</div>
+                            </div>
+                        </div>
+                        <div>
+                            <i>道路</i>是双车道宽，由锚点控制的样条曲线表示。道路位置使用站-纬(SL)坐标。站是沿道路弧长的纵向距离。纬度是道路中心线左侧(负)或右侧(正)的横向偏移。
+                        </div>
+                    </div>
+                    <div id="editor-help-static-obstacles" class="is-hidden">
+                        <div class="gui-box flex">
+                            <div class="has-text-weight-bold has-text-right" style="display: flex; flex-direction: column; margin-right: 0.75rem;">
+                                <div style="flex-grow: 2; display: flex; align-items: center; justify-content: flex-end;">左键单击 + 拖拽</div>
+                                <div>Shift + 左键单击</div>
+                                <div>Ctrl + 左键单击 + 拖拽</div>
+                                <div>右键单击 + 拖拽</div>
+                            </div>
+                            <div>
+                                <div>放置新障碍物</div>
+                                <div><i>或</i> 移动障碍物</div>
+                                <div>删除障碍物</div>
+                                <div>旋转障碍物</div>
+                                <div>平移视图</div>
+                            </div>
+                        </div>
+                        <div>
+                            <i>静态障碍物</i>在模拟过程中不会移动。它们可以用来表示停车的汽车、道路碎片、施工区域等。
+                        </div>
+                    </div>
+                    <div id="editor-help-dynamic-obstacles" class="is-hidden">
+                        <i>动态障碍物</i>将根据其速度沿道路移动，从其初始站-纬位置开始。初始纬度是-1到+1之间的标准化值，对应于左右车道边界的纬度。
+                    </div>
+                </div>
+                <div class="button is-small is-static is-pulled-left" style="background: transparent; border: none;">
+                    <span class="icon is-medium has-text-grey-lighter">
+                        <i class="fas fa-lg fa-road"></i>
+                    </span>
+                </div>
+                <div class="field-body" style="padding-left: 8px;">
+                    <div class="field">
+                        <div class="control">
+                            <span id="editor-load" class="button is-small is-info" title="加载场景">
+                                <span class="icon is-medium">
+                                    <i class="fas fa-lg fa-folder-open"></i>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <span id="editor-save" class="button is-small is-success" title="保存场景">
+                                <span class="icon is-medium">
+                                    <i class="fas fa-lg fa-save"></i>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <span id="editor-share" class="button is-small is-warning" title="分享场景">
+                                <span class="icon is-medium">
+                                    <i class="fas fa-lg fa-link"></i>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field"></div>
+                    <div class="field">
+                        <div class="control">
+                            <span id="editor-finalize" class="button is-small is-link">
+                                <span class="icon">
+                                    <i class="fas fa-play"></i>
+                                </span>
+                                <span>运行</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field"></div>
+                    <div class="field has-addons">
+                        <div class="control">
+                            <span id="editor-path" class="button is-small is-dark is-outlined is-inverted">道路</span>
+                        </div>
+                        <div class="control">
+                            <span id="editor-obstacles" class="button is-small is-dark is-outlined is-inverted">静态障碍物</span>
+                        </div>
+                        <div class="control">
+                            <span id="editor-dynamic-obstacles" class="button is-small is-dark is-outlined is-inverted">动态障碍物</span>
+                        </div>
+                    </div>
+                    <div class="field" style="position: relative;">
+                        <div class="control">
+                            <span id="editor-clear" class="button is-small is-danger">清除&hellip;</span>
+                            <div id="editor-clear-options" class="gui-box is-hidden">
+                                <div class="buttons">
+                                    <span id="editor-clear-all" class="button is-small is-danger">全部</span>
+                                    <span id="editor-clear-dynamic-obstacles" class="button is-small is-warning">动态障碍物</span>
+                                    <span id="editor-clear-obstacles" class="button is-small is-warning">静态障碍物</span>
+                                    <span id="editor-clear-path" class="button is-small is-warning">道路</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="cameras" class="gui-box sim-mode-box">
+                <div class="button is-small is-static is-pulled-left" style="background: transparent; border: none;">
+                    <span class="icon is-medium has-text-grey-lighter">
+                        <i class="fas fa-lg fa-eye"></i>
+                    </span>
+                </div>
+                <div class="button is-small is-static has-text-grey-light has-text-right is-paddingless is-pulled-right" style="margin-left: 8px; width: 50px; background: transparent; border: none;">
+                    <span id="fps">&mdash;</span> fps
+                </div>
+                <div class="field is-grouped" style="padding-left: 8px;">
+                    <div class="control">
+                        <div class="buttons has-addons" style="margin-bottom: 0;">
+                            <span id="camera-chase" class="button is-small is-dark is-outlined is-inverted" style="margin-bottom: 0;">跟随</span>
+                            <span id="camera-topDown" class="button is-small is-dark is-outlined is-inverted" style="margin-bottom: 0;">俯视</span>
+                            <span id="camera-free" class="button is-small is-dark is-outlined is-inverted" style="margin-bottom: 0;">自由</span>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <div class="buttons has-addons" style="margin-bottom: 0;">
+                            <span id="camera-2D" class="button is-small is-dark is-outlined is-inverted" style="margin-bottom: 0;">2D</span>
+                            <span id="camera-3D" class="button is-small is-dark is-outlined is-inverted" style="margin-bottom: 0;">3D</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="welcome-modal" class="modal">
+            <div id="welcome-modal-background" class="modal-background" style="background-color: transparent;"></div>
+            <div class="modal-content content">
+                <div class="modal-box has-text-grey-lighter">
+                    <div class="hero is-dark is-bold" style="position: relative;">
+                        <button id="welcome-modal-close" class="delete is-medium" style="position: absolute; top: 0.5rem; right: 0.5rem;"></button>
+                        <div class="hero-body" style="padding: 1.5rem;">
+                            <div class="title is-4"><b>Dash</b> 自动驾驶汽车模拟器</div>
+                            <div class="subtitle is-6">基于WebGL和Three.js构建</div>
+                        </div>
+                    </div>
+                    <p></p>
+                    <p>
+                        本项目演示了浏览器中的实时、在路上、基于晶格的自动驾驶车辆运动规划器。
+                        许多自动驾驶车辆运动规划器都是用C或C++等底层语言实现的，
+                        或者它们利用CUDA或OpenCL等计算平台在GPU上以高度并行的方式生成规划。
+                        使用WebGL，我们可以在浏览器中实现类似的并行规划算法，
+                        这些算法可以在各种中等性能的消费级显卡上运行。
+                        通过Three.js，运动规划器可以在实时3D模拟场景中执行。
+                    </p>
+                    <p>
+                        此模拟器仍在开发中。您可能会看到错误、WebGL崩溃、
+                        奇怪的车辆行为以及其他各种故障。
+                        目前，它仅在<a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>中完全功能正常，
+                        需要<a href="https://github.com/weyumm/AI_DashAuto_Game/blob/master/README.md#enable-hardware-acceleration" target="_blank">启用硬件加速</a>
+                        和<a href="https://github.com/weyumm/AI_DashAuto_Game/blob/master/README.md#enable-experimental-canvas-features" target="_blank">启用实验性画布功能</a>。
+                        目标帧率为60fps，但根据您的硬件规划所需时间，运行速度可能会较慢。
+                    </p>
+                    <p>
+                        下一步：尝试几个<a id="welcome-modal-examples">示例场景</a>
+                        或<a id="welcome-modal-create">创建您自己的场景</a>。
+                    </p>
+                    <p>
+                        源代码和更多信息可以在<a href="https://github.com/weyumm/AI_DashAuto_Game/blob/master/README.md" target="_blank">README</a>中找到。
+                    </p>
+                    <p class="is-size-7 has-text-grey">
+                        &copy; 2025 weyumm &bull; <a href="https://github.com/weyumm/AI_DashAuto_Game/blob/master/LICENSE" target="_blank">MIT许可证</a> &bull; <a href="https://github.com/weyumm/AI_DashAuto_Game" target="_blank">GitHub</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="scenarios-modal" class="modal">
+            <div id="scenarios-modal-background" class="modal-background" style="background-color: transparent;"></div>
+            <div class="modal-content">
+                <div class="modal-box has-text-grey-lighter">
+                    <button id="scenarios-modal-close" class="delete is-medium is-pulled-right"></button>
+                    <div class="title is-5 has-text-grey-lighter">加载场景</div>
+                    <div id="scenarios-modal-tabs" class="tabs is-small is-toggle">
+                        <ul>
+                            <li id="scenarios-modal-examples-tab-button"><a>示例场景</a></li>
+                            <li id="scenarios-modal-saved-tab-button"><a>已保存场景</a></li>
+                            <li id="scenarios-modal-import-tab-button"><a>导入场景</a></li>
+                        </ul>
+                    </div>
+                    <div id="scenarios-modal-examples-tab" class="scenarios-modal-tab is-hidden has-text-weight-bold has-text-grey-lighter">
+                        <div style="height: calc(100% + 0.75rem);">
+                            <div class="columns">
+                                <div id="example-0" class="column">
+                                    <img src="images/examples/one_car_overtake.png" />
+                                    <div class="name">单车超车</div>
+                                </div>
+                                <div id="example-1" class="column">
+                                    <img src="images/examples/two_car_overtake.png" />
+                                    <div class="name">双车超车</div>
+                                </div>
+                            </div>
+                            <div class="columns">
+                                <div id="example-2" class="column">
+                                    <img src="images/examples/rough_road.png" />
+                                    <div class="name">崎岖道路</div>
+                                </div>
+                                <div id="example-3" class="column">
+                                    <img src="images/examples/dodging_a_speeder.png" />
+                                    <div class="name">躲避超速车辆</div>
+                                </div>
+                            </div>
+                            <div class="columns">
+                                <div id="example-4" class="column">
+                                    <img src="images/examples/lane_blockage.png" />
+                                    <div class="name">车道堵塞与对向车流</div>
+                                </div>
+                                <div id="example-5" class="column">
+                                    <img src="images/examples/merging.png" />
+                                    <div class="name">并入慢速车流</div>
+                                </div>
+                            </div>
+                            <div class="columns">
+                                <div id="example-6" class="column">
+                                    <img src="images/examples/crosswalks.png" />
+                                    <div class="name">通过人行横道</div>
+                                </div>
+                                <div id="example-7" class="column">
+                                    <img src="images/examples/peloton.png" />
+                                    <div class="name">追赶骑行队伍</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="scenarios-modal-saved-tab" class="scenarios-modal-tab is-hidden">
+                        <div class="columns">
+                            <div id="scenarios-sort-name" class="column is-7 is-size-7 scenario-sort-button">名称</div>
+                            <div id="scenarios-sort-saved-at" class="column is-4 is-size-7 scenario-sort-button is-underlined">保存日期</div>
+                            <div class="column is-1"></div>
+                        </div>
+                        <div id="scenarios-modal-items"></div>
+                    </div>
+                    <div id="scenarios-modal-import-tab" class="scenarios-modal-tab is-hidden">
+                        <div class="field" style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="control" style="flex: 1; display: flex; flex-direction: column;">
+                                <textarea id="scenario-import-box" class="textarea" type="text" placeholder="在此处粘贴导出的场景代码" style="flex: 1; resize: none; border-width: 2px;"></textarea>
+                            </div>
+                            <div id="scenario-import-info" class="is-size-7 is-hidden" style="margin-top: 1.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="scenario-share-modal" class="modal">
+            <div id="scenario-share-modal-background" class="modal-background" style="background-color: transparent;"></div>
+            <div class="modal-content">
+                <div class="modal-box has-text-grey-lighter">
+                    <button id="scenario-share-modal-close" class="delete is-medium is-pulled-right"></button>
+                    <div class="title is-5 has-text-grey-lighter">分享场景</div>
+                    <div>加载时此链接将自动运行场景：</div>
+                    <div class="field has-addons">
+                        <div class="control has-icons-left is-expanded">
+                            <input id="scenario-share-link" class="input" type="text" readonly value="http://google.com" />
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-link"></i>
+                            </span>
+                        </div>
+                        <div class="control">
+                            <div id="scenario-share-clipboard" class="button">
+                                <div>
+                                    <span id="scenario-share-clipboard-icon" class="icon is-small">
+                                        <i class="fas fa-clipboard"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <span id="scenario-share-clipboard-success-icon" class="icon is-small is-hidden">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        可以使用加载菜单导入此代码：
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <textarea id="scenario-share-box" class="textarea" type="text" readonly style="height: calc(40vh); resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script defer src="vendor/fontawesome-all.js"></script>
+        <script src="vendor/three.js"></script>
+        <script src="vendor/THREE.MeshLine.js"></script>
+        <script src="js/Utils.js"></script>
+        <script src="dist/PathPlannerWorker.js"></script>
+        <script src="dist/Dash.js"></script>
+	</body>
+</html>
