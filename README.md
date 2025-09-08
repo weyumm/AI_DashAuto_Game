@@ -2,6 +2,12 @@
 
 基于WebGL和Three.js构建的实时运动规划器和自动驾驶汽车模拟器。
 
+
+
+https://github.com/user-attachments/assets/6e52a323-aafe-4068-bcbe-fd0146ddf7ce
+
+
+
 ![Dash](./readme/dash.gif)
 
 这个项目展示了在浏览器中实现实时、基于道路格子的自动驾驶汽车运动规划器。许多自动驾驶汽车的运动规划器都是在C或C++中实现的，或者利用CUDA或OpenCL等计算平台在GPU上高度并行地生成规划。通过WebGL，我们可以在浏览器中实现类似的并行规划算法，这些算法可以在各种中等性能的消费级显卡上运行。借助Three.js，可以在实时3D模拟场景中执行运动规划器。
